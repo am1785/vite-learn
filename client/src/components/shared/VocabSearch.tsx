@@ -1,5 +1,5 @@
-import {useState} from 'react'
-import { useQueryClient, useQuery } from 'react-query'
+import { useState } from 'react'
+import { useQueryClient } from 'react-query'
 
 // export interface SearchProps {
 //     readonly onAddMessage: (text: string) => void
@@ -12,6 +12,8 @@ function VocabSearch() {
     const [searchResult, setSearchResult] = useState(null)
     const [status, setStatus] = useState('idle')
 
+
+
     const fetchWord = async () => {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${query}`)
         return res.json()
@@ -19,41 +21,50 @@ function VocabSearch() {
     // const searchQuery = useQuery({
     //     queryKey: ["vocab"],
     //     queryFn: fetchWord,
+    //     enabled: false,
     // })
 
     // const { data } = useQuery(['fetchData', query], () => fetchWord)
     // const mutation = useMutation();
     const queryClient = useQueryClient();
-
     const handleSubmit = async (e:any) => {
         e.preventDefault();
         console.log('searching for ' + query)
 
         let data:any = {}
+
+        setStatus('loading')
         try {
+            // setTimeout to emulate latency
+            setTimeout( async ()=> {
             data = await queryClient.fetchQuery({ queryKey: ["vocab"], queryFn: fetchWord });
+            console.log(data)
+            setStatus('success')
+            setSearchResult(data)
+            }, 2000)
         } catch (error) {
             data['title'] = 'No Definitions Found'
             console.log(error)
+            setStatus('error')
         }
 
-        console.log(data)
+        // console.log(status)
 
-        // handle invalid search
-        data['title'] === "No Definitions Found" ? setSearchResult(null) : setSearchResult(data)
+        // TODO: handle invalid search
 
     }
 
 return (<>
 <div className="relative mt-6 max-w-xl mx-auto">
-<span className="absolute inset-y-0 left-0 pl-3 flex items-center">
+{ status === 'idle' || status === 'error' || status === 'success' ?
+(<div className=''><span className="absolute inset-y-0 left-0 pl-3 flex items-center">
 <svg className="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
     <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor"/>
 </svg>
 </span>
 <form onSubmit={handleSubmit}>
-<input className="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="search word" onChange={(e)=>setQuery(e.target.value)}></input>
-</form>
+<input className="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="search word" value={query} onChange={(e)=>setQuery(e.target.value)}></input>
+</form></div>) : <svg className="animate-pulse rounded-full h-5 w-5 m-0 bg-blue-600 mx-auto" viewBox="0 0 24 24"> </svg> }
 </div>
 
 {searchResult ? (
