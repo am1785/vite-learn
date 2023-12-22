@@ -1,20 +1,48 @@
 import { useState } from 'react'
 import { useQueryClient } from 'react-query'
 
-// export interface SearchProps {
-//     readonly onAddMessage: (text: string) => void
-//     readonly onFetchAsyncMessage: () => void
-//     readonly onAlert: () => void
-// }
+// @ts-ignore
+import { createRequire } from "module"
+const require = createRequire(import.meta.url)
+// @ts-ignore
+// import * as WordNet from 'node-wordnet'
+
+const wordnet = require('wordnet')
+await wordnet.init()
+
+export type googleVocabResult = {
+    word: string,
+    phonetic: string,
+    meanings: {
+        definitions: string[],
+        partOfSpeech: string,
+        example: string,
+        synonyms: string[],
+        antonyms: string[]
+    }[],
+
+}
+
+export type wordnetVocabResult = {
+
+}
+
+export type datamuseVocabResult = {
+    spellsLike: string,
+    soundsLike: string
+}
 
 function VocabSearch() {
     const [query, setQuery] = useState('')
     const [searchResult, setSearchResult] = useState(null)
     const [status, setStatus] = useState('idle')
 
-
-
     const fetchWord = async () => {
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${query}`)
+        return res.json()
+    }
+
+    const fetchWordNet = async () => {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${query}`)
         return res.json()
     }
@@ -26,6 +54,7 @@ function VocabSearch() {
 
     // const { data } = useQuery(['fetchData', query], () => fetchWord)
     // const mutation = useMutation();
+
     const queryClient = useQueryClient();
     const handleSubmit = async (e:any) => {
         e.preventDefault();
@@ -50,12 +79,12 @@ function VocabSearch() {
 
         // console.log(status)
 
-        // TODO: handle invalid search
+        // TODO: handle invalid search using datamuse suggestion https://api.datamuse.com/sug?s={query}
 
     }
 
 return (<>
-<div className="relative mt-6 max-w-xl mx-auto">
+<div className="relative mt-6 w-full mx-auto">
 { status === 'idle' || status === 'error' || status === 'success' ?
 (<div className=''><span className="absolute inset-y-0 left-0 pl-3 flex items-center">
 <svg className="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none">
@@ -63,7 +92,7 @@ return (<>
 </svg>
 </span>
 <form onSubmit={handleSubmit}>
-<input className="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="search word" value={query} onChange={(e)=>setQuery(e.target.value)}></input>
+<input className="w-fit border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline" type="text" placeholder="search word" value={query} onChange={(e)=>setQuery(e.target.value)}></input>
 </form></div>) : <svg className="animate-pulse rounded-full h-5 w-5 m-0 bg-blue-600 mx-auto" viewBox="0 0 24 24"> </svg> }
 </div>
 
